@@ -1,0 +1,2 @@
+"0","par(mfrow = c(2, 2))"
+"0","boxplot(Age~Survived, data = datos, main =""Boxplot de Supervivencia"")"

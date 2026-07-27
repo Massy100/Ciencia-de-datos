@@ -1,0 +1,28 @@
+#install.packages(c("readxl", "jsonlite", "googlesheets4","rvest", "ggplot2", "dplyr"))
+library(dplyr)
+library(googlesheets4)
+library(rvest)
+# Crea un vector
+nombres <- c("Falcon 9","Saturn V", "soyuz", "Ariane 5", "Delta IV")
+anios = c(2010, 196, 1966, 1996, 2002)
+data.frame(Nombre = nombres, "Primer Lanzamiento" = anios) -> cohetes
+cohetes
+print(cohetes)
+
+#Extraer un dato: mostrar el lanzamiento mas antiguo
+indice_antiguo = which.min(cohetes$Primer.Lanzamiento)
+print(paste("el cohete mas antiguo es:", cohetes$Nombre[indice_antiguo]))
+#Carga de datos
+ruta = "https://raw.githubusercontent.com/abemen/datasets/refs/heads/main/antropometricas.csv"
+antropometricas = read.csv((ruta))
+print(antropometricas)
+nasa = "https://www.nasa.gov/2026-news-releases/"
+pagina <- read_html(nasa)
+
+# --- Forma 1: EXTRAYENDO POR CLASE CSS (LA MAS PRECISA) ---
+#Usamos html_nodes() con el sector clase .hds-a11y-heading-2
+
+titulos <- pagina %>%
+  html_nodes(".hds-a11y-heading-22") %>%
+  html_text(trim = TRUE) #trim = TRUE elimina espacios innecesarios
+print(titulos)

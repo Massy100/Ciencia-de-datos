@@ -1,0 +1,4 @@
+"0","barplot(table(datos$PClass, datos$Survived), beside = TRUE, main = ""Clase Vs. Supervivencia"")"
+"2","Error in table(datos$PClass, datos$Survived) : 
+  all arguments must have the same length
+"

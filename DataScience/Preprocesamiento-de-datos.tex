@@ -1,0 +1,190 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[
+]{article}
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{graphicx}
+\makeatletter
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
+% Set default figure placement to htbp
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={Preprocesamiento de datos},
+  pdfauthor={Massielle Coti},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Preprocesamiento de datos}
+\author{Massielle Coti}
+\date{2026-07-16}
+
+\begin{document}
+\maketitle
+
+\subsection{Carga de datos}\label{carga-de-datos}
+
+¿Como visualizamos los primeros datos?
+
+When you click the \textbf{Knit} button a document will be generated
+that includes both content as well as the output of any embedded R code
+chunks within the document. You can embed an R code chunk like this:
+
+\begin{verbatim}
+## , , Age = Child, Survived = No
+## 
+##       Sex
+## Class  Male Female
+##   1st     0      0
+##   2nd     0      0
+##   3rd    35     17
+##   Crew    0      0
+## 
+## , , Age = Adult, Survived = No
+## 
+##       Sex
+## Class  Male Female
+##   1st   118      4
+##   2nd   154     13
+##   3rd   387     89
+##   Crew  670      3
+## 
+## , , Age = Child, Survived = Yes
+## 
+##       Sex
+## Class  Male Female
+##   1st     5      1
+##   2nd    11     13
+##   3rd    13     14
+##   Crew    0      0
+## 
+## , , Age = Adult, Survived = Yes
+## 
+##       Sex
+## Class  Male Female
+##   1st    57    140
+##   2nd    14     80
+##   3rd    75     76
+##   Crew  192     20
+\end{verbatim}
+
+¿Como hacemos para saber de que tipo son los datos (texto/numero)?
+
+\begin{verbatim}
+##  'table' num [1:4, 1:2, 1:2, 1:2] 0 0 35 0 0 0 17 0 118 154 ...
+##  - attr(*, "dimnames")=List of 4
+##   ..$ Class   : chr [1:4] "1st" "2nd" "3rd" "Crew"
+##   ..$ Sex     : chr [1:2] "Male" "Female"
+##   ..$ Age     : chr [1:2] "Child" "Adult"
+##   ..$ Survived: chr [1:2] "No" "Yes"
+\end{verbatim}
+
+\subsection{Limpieza de datos}\label{limpieza-de-datos}
+
+¿Cuantos datos faltantes hay para la variable edad (Age)?
+
+\begin{verbatim}
+## [1] 177
+\end{verbatim}
+
+Si los eliminamos perdemos demasiada informacion ¿Que hacemos?
+
+Solucion: \textbf{Imputarlos} (imputar a la Media o la Mediana)
+Recordatorio: La media se ve afectada por los \emph{valores atipicos
+(outliers)}
+
+\subsection{Analisis Exploratorio de datos (EDA) con
+graficos}\label{analisis-exploratorio-de-datos-eda-con-graficos}
+
+Como determinamos si los ninios (Age \textless{} 12) sobrevivieron mas?
+generamos una columna llamada `Child'
+
+\subsection{Nivel 1: R Base (Sin incluir ningun
+paquete)}\label{nivel-1-r-base-sin-incluir-ningun-paquete}
+
+Ideal para entender la logica sin dependencias
+
+\subsubsection{Tabla de contigencia
+(Frecuencias)}\label{tabla-de-contigencia-frecuencias}
+
+Cuanto hombresy mujeres sobrevivieron?
+
+\begin{verbatim}
+##    
+##       0   1
+##   0 549   0
+##   1   0 342
+\end{verbatim}
+
+\begin{verbatim}
+##    
+##       0   1
+##   0 100   0
+##   1   0 100
+\end{verbatim}
+
+\subsection{Box Plot (Edad vs
+Supervivencia)}\label{box-plot-edad-vs-supervivencia}
+
+La edad de los que sobrevivieron es similar a la edad de las que no lo
+hicieron?
+\pandocbounded{\includegraphics[keepaspectratio]{Preprocesamiento-de-datos_files/Preprocesamiento-de-datos_files/figure-latex/unnamed-chunk-6-1.pdf}}
+
+\section{Barplot de supervivencia por
+clase}\label{barplot-de-supervivencia-por-clase}
+
+La clase influyo en la supervivencia?
+\pandocbounded{\includegraphics[keepaspectratio]{Preprocesamiento-de-datos_files/Preprocesamiento-de-datos_files/figure-latex/unnamed-chunk-7-1.pdf}}
+Que porcentaje de cada clase sobrevivio?
+\pandocbounded{\includegraphics[keepaspectratio]{Preprocesamiento-de-datos_files/Preprocesamiento-de-datos_files/figure-latex/unnamed-chunk-8-1.pdf}}
+
+\end{document}
