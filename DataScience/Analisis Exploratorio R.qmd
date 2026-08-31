@@ -5,6 +5,7 @@ format: html
 editor: visual
 jupyter: python3
 ---
+
 ```{r}
 # Cargar librerias R
 library(tidyverse)
@@ -91,8 +92,8 @@ datos_python.loc[indices_mar, 'satisfaccion'] = np.nan
 print(datos_python.head())
 ```
 
-
 ### Analisis exploratorio inicial
+
 ```{r}
 #| label: analisis_inicial_r
 #| echo: true
@@ -109,8 +110,8 @@ x = "Variable", y="Proporcion de faltantes"
 )
 ```
 
-
 **Equivalente en Python**
+
 ```{python}
 #| label: analisis_inicial_python
 #| echo: true
@@ -128,21 +129,14 @@ plt.title("Proporcion de valores faltantes por variable")
 plt.show()
 ```
 
-
 ## Imputacion de valores faltantes
+
 ### Metodos de imputacion
-**Tipos de imputacion**
-1.  Imputacion simple:
-  - Media / Mediana / Moda
-  - Valor constante
-  - Ultimo valor observado (LOCF)
-2.  Imputacion avanzada:
-  - Regresion
-  - K-Nearest (KNN)
-  - Imputacion multiple por ecuaciones encadenadas (MICE)
-  - Imputacion por arboles de decision
+
+**Tipos de imputacion** 1. Imputacion simple: - Media / Mediana / Moda - Valor constante - Ultimo valor observado (LOCF) 2. Imputacion avanzada: - Regresion - K-Nearest (KNN) - Imputacion multiple por ecuaciones encadenadas (MICE) - Imputacion por arboles de decision
 
 ### Imputacion en R
+
 ```{r}
 #| label: imputacion_r
 #| echo: true
@@ -229,6 +223,7 @@ print(comparacion_py)
 ```
 
 ## Deteccion y Tratamiento en Python
+
 ```{python}
 #| label: uno_mas
 #| echo: true
@@ -270,7 +265,7 @@ print(datos_python['ingreso'].describe())
 print("\nEstadísticos después de winsorización:")
 print(datos_py_winsor['ingreso'].describe())
 
-``` 
+```
 
 ```{python}
 #| label: outliers-python
@@ -365,7 +360,9 @@ plt.show()
 ```
 
 ## Analisis de Correlacion y Relaciones
+
 **Correlacion y relaciones en R**
+
 ```{r}
 #| label: analisis-correlacion-r
 #| echo: True
@@ -385,6 +382,7 @@ main = "Graficos de Dispersion entre Variables")
 ```
 
 **Correlacion y relaciones en Python**
+
 ```{python}
 #| label: analisis-correlacion-python
 #| echo: true
@@ -408,7 +406,9 @@ plt.show()
 ## Conclusiones y recomendaciones
 
 ### Resumen de hallazgos
+
 **Resumen R**
+
 ```{r}
 #| label: conclusiones-r
 #| echo: true
@@ -435,6 +435,7 @@ cat("   - Para outliers: Winsorizacion o transformacion logaritmica\n\n")
 ```
 
 ## Guardado y carga de datos
+
 ```{r}
 #| label: guardar-cargar-datos
 #| echo: true

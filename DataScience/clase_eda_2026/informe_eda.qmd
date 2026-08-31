@@ -1,0 +1,81 @@
+---
+title: "Analisis Exploratorio de datos"
+author: "Massielle Coti"
+format: 
+  html:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-fold: true
+    code-tools: true
+    theme: cosmo
+    highlight: tango
+  pdf:
+    toc: true
+    number-sections: true
+editor: visual
+execute: 
+  echo: true
+  warning: false
+  message: false
+  cache: true
+---
+
+# Configuracion Inicial
+
+```{r}
+# Cargar paquetes
+library(tidyverse)
+library(naniar)
+library(VIM)
+library(mice)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(corrplot)
+library(here)
+
+# Configuraciones
+options(scipen = 999)
+theme_set(theme_minimal())
+```
+
+```{r}
+
+```
+
+```{r}
+```
+
+```{r}
+```
+
+```{r}
+```
+
+```{r}
+```
+
+```{r}
+```
+
+```{r}
+```
+
+```{r}
+```
+
+```{r}
+```
+
+```{r}
+```
+
+```{r}
+```
+
+```{r}
+```
+
+```{r}
+```
