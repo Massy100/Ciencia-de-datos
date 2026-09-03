@@ -1,7 +1,7 @@
 ---
-title: "Analisis Exploratorio de datos"
+title: "Análisis Exploratorio"
 author: "Massielle Coti"
-format: 
+format:
   html:
     toc: true
     toc-depth: 3
@@ -9,73 +9,165 @@ format:
     code-fold: true
     code-tools: true
     theme: cosmo
-    highlight: tango
+    highlight-style: tango
+
   pdf:
     toc: true
     number-sections: true
+
 editor: visual
-execute: 
+
+execute:
   echo: true
   warning: false
   message: false
   cache: true
 ---
 
-# Configuracion Inicial
+# Configuración inicial
 
 ```{r}
-# Cargar paquetes
+#| label: configuracion-inicial
+
+# Cargar librerías
 library(tidyverse)
-library(naniar)
-library(VIM)
-library(mice)
 library(ggplot2)
-library(dplyr)
-library(tidyr)
+library(naniar)
+library(mice)
 library(corrplot)
 library(here)
 
 # Configuraciones
 options(scipen = 999)
 theme_set(theme_minimal())
+
+# Cargar datos
+datos_raw <- readRDS(here("data/datos_raw.rds"))
+datos_median <- readRDS(here("data/datos_median.rds"))
+datos_regresion <- readRDS(here("data/datos_regresion.rds"))
+datos_mice <- readRDS(here("data/datos_mice.rds"))
+datos_winsor <- readRDS(here("data/datos_winsor.rds"))
+
+# Función para mostrar gráficos
+mostrar_grafico <- function(g) {
+  print(g)
+}
 ```
 
-```{r}
+# Análisis Exploratorio
 
+```{r}
+#| label: exploracion-inicial
+#| fig-cap: "Proporción de valores faltantes por variable"
+#| fig-width: 10
+#| fig-height: 6
+
+# Resumen de datos
+summary(datos_raw)
+
+# Visualización de valores faltantes
+mostrar_grafico(
+  gg_miss_var(datos_raw) +
+    labs(
+      title = "Valores faltantes por variable",
+      x = "Variables",
+      y = "Cantidad de valores faltantes"
+    ) +
+    theme_minimal()
+)
 ```
 
-```{r}
-```
+# Imputación de datos
+
+## Comprobación de métodos
 
 ```{r}
+#| label: comparacion-imputacion
+#| fig-width: 12
+#| fig-height: 8
+
+# Comparar distribuciones
+par(mfrow = c(2, 2))
+
+hist(
+  datos_raw$edad,
+  main = "Original",
+  col = "lightblue",
+  xlab = "Edad"
+)
+
+hist(
+  datos_median$edad,
+  main = "Mediana",
+  col = "lightgreen",
+  xlab = "Edad"
+)
+
+hist(
+  datos_regresion$edad,
+  main = "Regresión",
+  col = "lightyellow",
+  xlab = "Edad"
+)
+
+hist(
+  datos_mice$edad,
+  main = "MICE",
+  col = "lightpink",
+  xlab = "Edad"
+)
+
+par(mfrow = c(1, 1))
 ```
 
-```{r}
-```
+## Comparación de outliers
 
 ```{r}
+#| label: comparacion-outliers
+#| fig-cap: "Comparación del ingreso antes y después de la winsorización"
+#| fig-width: 10
+#| fig-height: 6
+
+boxplot(
+  datos_mice$ingreso,
+  datos_winsor$ingreso,
+  names = c("Original", "Winsorizado"),
+  main = "Comparación de Ingreso",
+  ylab = "Ingreso",
+  col = c("lightblue", "lightgreen")
+)
 ```
 
-```{r}
-```
+# Conclusiones
 
 ```{r}
-```
+#| label: conclusiones
+#| echo: false
 
-```{r}
-```
+cat("=== CONCLUSIONES DEL ANÁLISIS ===\n\n")
 
-```{r}
-```
+cat("1. Datos faltantes:\n")
 
-```{r}
-```
+cat(
+  "   - Edad: MCAR (",
+  sum(is.na(datos_raw$edad)),
+  " valores)\n",
+  sep = ""
+)
 
-```{r}
-```
+cat(
+  "   - Satisfacción: MAR (",
+  sum(is.na(datos_raw$satisfaccion)),
+  " valores)\n\n",
+  sep = ""
+)
 
-```{r}
-```
+cat("2. Métodos de imputación:\n")
+cat("   - Mediana: simple y rápida\n")
+cat("   - Regresión: considera relaciones entre variables\n")
+cat("   - MICE: más sofisticado, captura patrones complejos\n\n")
 
-```{r}
+cat("3. Outliers:\n")
+cat("   - Detectados en la variable ingreso\n")
+cat("   - Tratamiento: winsorización al 5% y 95%\n")
 ```

@@ -11,7 +11,7 @@
  # Funcion para detectar outliers con IQR
  detectar_outliers_iqr <- function(x) {
    Q1 <- quantile(x, 0.25, na.rm = TRUE)
-   Q3 <- quantile(x, 0.75, na_rm = TRUE)
+   Q3 <- quantile(x, 0.75, na.rm = TRUE)
    IQR <- Q3 - Q1
    lower_bound <- Q1 - 1.5 * IQR
    upper_bound <- Q3 + 1.5 * IQR
