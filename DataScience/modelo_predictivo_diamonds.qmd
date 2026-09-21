@@ -1,0 +1,185 @@
+---
+title: "modelo_predictivo_diamonds"
+author: "Massielle Coti"
+format: html
+editor: visual
+---
+
+## Carga de paquetes
+
+```{r, message=FALSE}
+# Cargamos librerias necesarias
+library(tidyverse)
+library(tidymodels) # Para modelado
+library(xgboost)  # Para XGBoost
+library(vip) # Para importancia de variables
+library(ggplot2)
+
+# Cargamos datos de diamantes
+data("diamonds")
+glimpse(diamonds)
+```
+
+## **Descripcion**
+
+'tidymodels' es el ecosistema estandar para ML en R. Unifica procesamiento, modelado y evaluacion. 'diamonds' contiene \~54k registros con 10 variables.\*
+
+------------------------------------------------------------------------
+
+## Division en conjunto de Entrenamiento/Pruebas (Train/Test)
+
+```{r}
+# Semilla para reproducir el modelo
+set.seed(202697)
+
+# Dividimos el conjunto de entrenamiento 80% y pruebas 20%
+split <- initial_split(diamonds, prop = 0.8)
+train <- training(split)
+test <- testing(split)
+
+# Establecemos la relacion para el modelo
+receta <- recipe(price ~ ., data = train) %>%
+  step_log(price, base = 10) %>%
+  step_dummy(cut, color, clarity) %>%  # Variables categóricas
+  step_normalize(carat, depth, table, x, y, z)  # Variables numéricas
+
+# Se prepara el modelo (la receta)
+prep_receta <- prep(receta)
+
+# Aplicar la receta a train y test
+train_prep <- bake(prep_receta, new_data = NULL)
+test_prep <- bake(prep_receta, new_data = test)
+
+# Verificamos
+dim(train_prep)
+```
+
+**Descripcion**
+
+Separamos para no contaminar el modelo con datos de prueba. La receta estandariza las variables y convierte categoricas a numericas. Hacemos log(price) porque su distribucion es sesgada a la derecha.\*
+
+------------------------------------------------------------------------
+
+## Entrenamiento de 3 modelos
+
+### Modelo de Regresion Lineal (baseline)
+
+```{r}
+lm_model <- linear_reg() %>%
+  set_engine("lm") %>%
+  set_mode("regression")
+
+lm_fit <- lm_model %>%
+  fit(price ~., data = train_prep)
+
+lm_fit
+
+```
+
+### Modelo 2: Random Forest
+
+```{r}
+# Definir el modelo de Random Forest para regresión
+rf_mode <- rand_forest() %>%
+  set_engine("ranger") %>%
+  set_mode("regression")
+
+rf_fit <- rf_mode %>% 
+  fit(price ~ ., data = train_prep)
+```
+
+### Modelo 3: XGBoost (boosting - potente)
+
+```{r}
+# Definir el modelo XGBoost
+xgb_mode <- boost_tree() %>%
+  set_engine("xgboost") %>%
+  set_mode("regression")
+
+# Ajustar (entrenar) el modelo
+xgb_fit <- xgb_mode %>%
+  fit(price ~ ., data = train_prep)
+```
+
+***Enfoques:*** 3 enfoques
+
+- Lineal: rápido y simple
+
+- Random Forest: reduce el sobreajuste
+
+- XGBoost: actualmente es uno de los mejores para datos tabulares
+
+## Todos utilizan la misma receta
+
+------------------------------------------------------------------------
+
+## Evaluación y comparación de los modelos
+
+```{r}
+# Funcion para calcular metricas
+evaluar_modelo <- function(modelo, datos_test, nombre){
+  preds <- predict(modelo, new_data = datos_test) %>%
+    bind_cols(datos_test %>% select(price))
+
+  # Deshacer el log (si aplica)
+  preds <- preds %>%
+   mutate(.pred_real = 10^.pred) # porque hicimos log10(price)
+  metricas <- preds %>%
+    metrics(truth = price, estimate = .pred_real)
+  return (metricas)
+}
+
+# Evaluacion de los 3 modelos
+metricas_lm <- evaluar_modelo(lm_fit, test_prep, "LM")
+metricas_rf <- evaluar_modelo(rf_fit, test_prep, "RF")
+metricas_xgb <-evaluar_modelo(xgb_fit, test_prep, "XGB")
+
+# Mostrar comparativa
+bind_rows(
+  metricas_lm %>% mutate(modelo="LM"),
+  metricas_rf %>% mutate(modelo="RF"),
+  metricas_xgb %>% mutate(modelo="XGB")
+) %>%
+  filter(.metric %in% c("rmse", "rsq")) %>%
+  select(modelo, .metric, .estimate) %>%
+  pivot_wider(names_from = .metric, values_from = .estimate) %>%
+  arrange(rmse)
+```
+
+**RMSE** mide error en dolares; R² mide varianza explicada.
+
+- Menor RMSE y mayor R² = mejor modelo
+
+------------------------------------------------------------------------
+
+## Guardado del mejor modelo y prediccion
+
+```{r}
+# Elegimos el mejor (Random Forest en este caso)
+mejor_modelo <- rf_fit
+
+# Guardamos el modelo y la receta para usar despues 
+saveRDS(mejor_modelo, "mejor_modelo_diamantes.rds")
+saveRDS(prep_receta, "receta_diamantes.rds")
+
+# Simulamos un nuevo diamantes
+nuevo_diamante <- tibble(
+  carat = 1.2,
+  cut = "Ideal",
+  color = "G",
+  clarity = "VS1",
+  depth = 61.5,
+  table = 56,
+  x = 6.8,
+  y = 6.7,
+  z = 4.2,
+  price = NA_real_ # Columna fantasma para que la receta no falle
+)
+
+# Preprocesar y predecir
+nuevo_prep <- bake(prep_receta, new_data = nuevo_diamante)
+prediccion <- predict(mejor_modelo, new_data=nuevo_prep) %>%
+  mutate(price_original = 10^.pred)
+
+prediccion
+```
