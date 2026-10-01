@@ -1,0 +1,502 @@
+---
+title: "modelo_predictivo_videojuegos"
+author: "Massielle Coti"
+format: html
+editor: visual
+---
+
+## Carga de paquetes
+
+```{r, message=FALSE, warning=FALSE}
+# Cargamos librerias necesarias
+library(tidyverse)
+library(tidymodels) # Para modelado
+library(ranger)     # Para Random Forest
+library(xgboost)    # Para XGBoost
+library(vip)        # Para importancia de variables
+library(ggplot2)
+
+# Cargamos el dataset de videojuegos
+videojuegos <- read_csv("vgsales.csv", show_col_types = FALSE)
+
+# Revisamos la estructura del dataset
+glimpse(videojuegos)
+```
+
+## **Descripcion**
+
+`tidymodels` es el ecosistema estandar para Machine Learning en R. Unifica el preprocesamiento, modelado y evaluacion.
+
+El dataset `vgsales.csv` contiene informacion sobre ventas de videojuegos, incluyendo:
+
+- `Name`: nombre del videojuego.
+- `Platform`: plataforma.
+- `Year`: año de lanzamiento.
+- `Genre`: genero.
+- `Publisher`: distribuidor/editor.
+- `NA_Sales`: ventas en Norteamerica.
+- `EU_Sales`: ventas en Europa.
+- `JP_Sales`: ventas en Japon.
+- `Other_Sales`: ventas en otras regiones.
+- `Global_Sales`: ventas globales.
+
+En este modelo se intentara predecir **Global_Sales**, expresado en millones de copias.
+
+--------------------------------------------------
+
+## Limpieza inicial del dataset
+
+```{r}
+# Seleccionamos solamente las variables que utilizaremos
+videojuegos_modelo <- videojuegos %>%
+  select(
+    Platform,
+    Year,
+    Genre,
+    Publisher,
+    Global_Sales
+  ) %>%
+  mutate(
+    # Convertimos Year a numerico por seguridad
+    Year = as.numeric(Year),
+
+    # Publisher tiene algunos valores faltantes
+    Publisher = replace_na(Publisher, "Desconocido")
+  )
+
+# Revisamos valores nulos
+colSums(is.na(videojuegos_modelo))
+
+# Resumen estadistico
+summary(videojuegos_modelo)
+```
+
+**Descripcion**
+
+Se seleccionan las variables que se utilizaran para construir el modelo predictivo.
+
+Los valores faltantes de `Publisher` se convierten a la categoria `"Desconocido"`. Los valores faltantes de `Year` se trataran posteriormente dentro de la receta mediante imputacion.
+
+------------------------------------------------------------------------
+
+## Exploracion de las ventas globales
+
+```{r}
+ggplot(videojuegos_modelo, aes(x = Global_Sales)) +
+  geom_histogram(bins = 50, fill = "steelblue", color = "white") +
+  labs(
+    title = "Distribucion de las ventas globales",
+    x = "Ventas globales (millones)",
+    y = "Frecuencia"
+  ) +
+  theme_minimal()
+```
+
+**Descripcion**
+
+La variable `Global_Sales` presenta una distribucion sesgada hacia la derecha: existen muchos videojuegos con ventas pequeñas y pocos titulos con ventas extremadamente altas.
+
+Por esta razon, durante el preprocesamiento se aplicara una transformacion logaritmica a la variable objetivo.
+
+------------------------------------------------------------------------
+
+## Division en conjunto de Entrenamiento/Pruebas (Train/Test)
+
+```{r}
+# Semilla para reproducir el modelo
+set.seed(202697)
+
+# Dividimos el conjunto: 80% entrenamiento y 20% pruebas
+split <- initial_split(videojuegos_modelo, prop = 0.8)
+
+train <- training(split)
+test <- testing(split)
+
+# Verificamos dimensiones
+dim(train)
+dim(test)
+```
+
+**Descripcion**
+
+Separamos los datos para evitar contaminar el modelo con informacion del conjunto de prueba.
+
+El modelo aprendera utilizando unicamente el conjunto de entrenamiento y posteriormente sera evaluado con datos que no ha visto anteriormente.
+
+------------------------------------------------------------------------
+
+## Preparacion de la receta
+
+```{r}
+# Establecemos la relacion para el modelo
+receta <- recipe(
+  Global_Sales ~ Platform + Year + Genre + Publisher,
+  data = train
+) %>%
+
+  # Imputamos los años faltantes con la mediana
+  step_impute_median(Year) %>%
+
+  # Agrupamos publishers poco frecuentes en la categoria "other"
+  # para evitar crear cientos de columnas dummy
+  step_other(Publisher, threshold = 0.01) %>%
+
+  # Convierte posibles categorias desconocidas en "unknown"
+  step_unknown(all_nominal_predictors()) %>%
+
+  # Convertimos variables categoricas a numericas
+  step_dummy(all_nominal_predictors()) %>%
+
+  # Normalizamos las variables numericas predictoras
+  step_normalize(all_numeric_predictors()) %>%
+
+  # Aplicamos log10 a las ventas globales
+  step_log(Global_Sales, base = 10)
+
+# Preparamos la receta
+prep_receta <- prep(receta)
+
+# Aplicamos la receta a entrenamiento y prueba
+train_prep <- bake(prep_receta, new_data = NULL)
+test_prep <- bake(prep_receta, new_data = test)
+
+# Verificamos dimensiones y estructura
+dim(train_prep)
+glimpse(train_prep)
+```
+
+**Descripcion**
+
+La receta realiza varias tareas automaticamente:
+
+- Imputa los años faltantes utilizando la mediana.
+- Agrupa publishers poco frecuentes.
+- Convierte variables categoricas a variables dummy.
+- Normaliza variables numericas.
+- Aplica `log10(Global_Sales)` para reducir el efecto de valores extremadamente altos.
+
+Todos los modelos utilizaran exactamente la misma receta.
+
+------------------------------------------------------------------------
+
+## Entrenamiento de 3 modelos
+
+### Modelo 1: Regresion Lineal (baseline)
+
+```{r}
+lm_model <- linear_reg() %>%
+  set_engine("lm") %>%
+  set_mode("regression")
+
+lm_fit <- lm_model %>%
+  fit(Global_Sales ~ ., data = train_prep)
+
+lm_fit
+```
+
+La regresion lineal funciona como modelo base. Es rapido, sencillo y permite tener un punto de comparacion para modelos mas complejos.
+
+------------------------------------------------------------------------
+
+### Modelo 2: Random Forest
+
+```{r}
+# Definimos el modelo Random Forest para regresion
+rf_model <- rand_forest(
+  trees = 500,
+  min_n = 5
+) %>%
+  set_engine("ranger") %>%
+  set_mode("regression")
+
+# Entrenamos el modelo
+rf_fit <- rf_model %>%
+  fit(Global_Sales ~ ., data = train_prep)
+
+rf_fit
+```
+
+Random Forest utiliza multiples arboles de decision y combina sus resultados. Es capaz de modelar relaciones no lineales y suele ser resistente al sobreajuste.
+
+------------------------------------------------------------------------
+
+### Modelo 3: XGBoost
+
+```{r}
+# Definimos el modelo XGBoost
+xgb_model <- boost_tree(
+  trees = 500,
+  tree_depth = 6,
+  learn_rate = 0.05
+) %>%
+  set_engine("xgboost") %>%
+  set_mode("regression")
+
+# Entrenamos el modelo
+xgb_fit <- xgb_model %>%
+  fit(Global_Sales ~ ., data = train_prep)
+
+xgb_fit
+```
+
+XGBoost utiliza *boosting*: cada nuevo arbol intenta corregir los errores cometidos por los anteriores.
+
+### Enfoques utilizados
+
+- **Regresion Lineal:** rapido y simple.
+- **Random Forest:** utiliza muchos arboles y captura relaciones no lineales.
+- **XGBoost:** algoritmo de boosting muy utilizado para datos tabulares.
+
+## Todos utilizan la misma receta
+
+------------------------------------------------------------------------
+
+## Evaluacion y comparacion de los modelos
+
+```{r}
+# Funcion para calcular metricas
+evaluar_modelo <- function(modelo, datos_test, nombre){
+
+  preds <- predict(modelo, new_data = datos_test) %>%
+    bind_cols(
+      datos_test %>%
+        select(Global_Sales)
+    )
+
+  # Global_Sales se encuentra en log10 dentro de test_prep.
+  # Regresamos prediccion y valor real a la escala original.
+  preds <- preds %>%
+    mutate(
+      prediccion_real = 10^.pred,
+      Global_Sales_real = 10^Global_Sales
+    )
+
+  metricas <- preds %>%
+    metrics(
+      truth = Global_Sales_real,
+      estimate = prediccion_real
+    )
+
+  metricas %>%
+    mutate(modelo = nombre)
+}
+
+# Evaluacion de los 3 modelos
+metricas_lm <- evaluar_modelo(
+  lm_fit,
+  test_prep,
+  "Regresion Lineal"
+)
+
+metricas_rf <- evaluar_modelo(
+  rf_fit,
+  test_prep,
+  "Random Forest"
+)
+
+metricas_xgb <- evaluar_modelo(
+  xgb_fit,
+  test_prep,
+  "XGBoost"
+)
+
+# Unimos los resultados
+comparacion <- bind_rows(
+  metricas_lm,
+  metricas_rf,
+  metricas_xgb
+)
+
+# Mostramos RMSE y R2
+tabla_comparacion <- comparacion %>%
+  filter(.metric %in% c("rmse", "rsq")) %>%
+  select(modelo, .metric, .estimate) %>%
+  pivot_wider(
+    names_from = .metric,
+    values_from = .estimate
+  ) %>%
+  arrange(rmse)
+
+tabla_comparacion
+```
+
+### Interpretacion de las metricas
+
+**RMSE** indica el error promedio del modelo expresado aproximadamente en millones de copias vendidas.
+
+**R²** indica que proporcion de la variabilidad de las ventas globales puede explicar el modelo.
+
+Un modelo presenta mejor desempeño cuando tiene:
+
+- **Menor RMSE**
+- **Mayor R²**
+
+------------------------------------------------------------------------
+
+## Comparacion grafica de modelos
+
+```{r}
+comparacion %>%
+  filter(.metric == "rmse") %>%
+  ggplot(
+    aes(
+      x = reorder(modelo, .estimate),
+      y = .estimate,
+      fill = modelo
+    )
+  ) +
+  geom_col(show.legend = FALSE) +
+  coord_flip() +
+  labs(
+    title = "Comparacion del RMSE de los modelos",
+    x = "Modelo",
+    y = "RMSE"
+  ) +
+  theme_minimal()
+```
+
+**Descripcion**
+
+La grafica permite comparar visualmente el error obtenido por cada algoritmo. El modelo con la barra mas pequeña posee el menor RMSE.
+
+------------------------------------------------------------------------
+
+## Seleccion automatica del mejor modelo
+
+```{r}
+# Identificamos el modelo con menor RMSE
+nombre_mejor <- tabla_comparacion %>%
+  slice_min(rmse, n = 1, with_ties = FALSE) %>%
+  pull(modelo)
+
+nombre_mejor
+
+# Seleccionamos el objeto correspondiente
+mejor_modelo <- switch(
+  nombre_mejor,
+  "Regresion Lineal" = lm_fit,
+  "Random Forest" = rf_fit,
+  "XGBoost" = xgb_fit
+)
+
+mejor_modelo
+```
+
+**Descripcion**
+
+En lugar de asumir de antemano cual algoritmo sera mejor, se selecciona automaticamente el que obtenga el menor RMSE en el conjunto de prueba.
+
+------------------------------------------------------------------------
+
+## Importancia de variables
+
+```{r}
+# Para obtener importancia de variables entrenamos una version
+# de Random Forest que calcule importancia por permutacion.
+
+rf_importancia_model <- rand_forest(
+  trees = 500,
+  min_n = 5
+) %>%
+  set_engine(
+    "ranger",
+    importance = "permutation"
+  ) %>%
+  set_mode("regression")
+
+rf_importancia_fit <- rf_importancia_model %>%
+  fit(Global_Sales ~ ., data = train_prep)
+
+# Grafica de importancia
+vip(
+  extract_fit_engine(rf_importancia_fit),
+  num_features = 15
+)
+```
+
+**Descripcion**
+
+La importancia de variables ayuda a identificar que caracteristicas contribuyen mas a las predicciones del modelo.
+
+Debido a que las variables categoricas fueron convertidas a columnas dummy, pueden aparecer plataformas, generos o publishers especificos entre las variables mas importantes.
+
+------------------------------------------------------------------------
+
+## Guardado del mejor modelo y la receta
+
+```{r}
+# Guardamos el mejor modelo
+saveRDS(
+  mejor_modelo,
+  "mejor_modelo_videojuegos.rds"
+)
+
+# Guardamos tambien la receta
+saveRDS(
+  prep_receta,
+  "receta_videojuegos.rds"
+)
+```
+
+Los archivos `.rds` permiten reutilizar posteriormente el modelo sin necesidad de entrenarlo nuevamente.
+
+------------------------------------------------------------------------
+
+## Prediccion de un nuevo videojuego
+
+```{r}
+# Simulamos un nuevo videojuego
+nuevo_videojuego <- tibble(
+  Platform = "PS4",
+  Year = 2016,
+  Genre = "Action",
+  Publisher = "Electronic Arts",
+  Global_Sales = NA_real_
+)
+
+# Como Global_Sales es la variable objetivo y se transforma con log,
+# aplicamos la receta permitiendo que el resultado sea desconocido.
+nuevo_prep <- bake(
+  prep_receta,
+  new_data = nuevo_videojuego,
+  composition = "tibble"
+)
+
+# Realizamos la prediccion en escala logaritmica
+prediccion <- predict(
+  mejor_modelo,
+  new_data = nuevo_prep
+)
+
+# Regresamos la prediccion a millones de copias
+prediccion <- prediccion %>%
+  mutate(
+    ventas_globales_estimadas_millones = 10^.pred
+  )
+
+prediccion
+```
+
+**Descripcion**
+
+El ejemplo simula un videojuego de accion publicado para PS4 en 2016 por Electronic Arts.
+
+El modelo utiliza sus caracteristicas para estimar `Global_Sales`.
+
+La prediccion final se convierte nuevamente desde escala logaritmica a la escala original, por lo que el resultado representa aproximadamente **millones de copias vendidas**.
+
+------------------------------------------------------------------------
+
+## Conclusion
+
+El documento construye y compara tres modelos predictivos para estimar las ventas globales de videojuegos:
+
+1.  Regresion Lineal.
+2.  Random Forest.
+3.  XGBoost.
+
+Los modelos utilizan como variables predictoras la plataforma, año, genero y publisher del videojuego.
+
+La comparacion mediante RMSE y R² permite determinar cual de los tres modelos obtiene el mejor rendimiento con datos que no fueron utilizados durante el entrenamiento.
+
+El uso de una receta comun garantiza que los tres algoritmos reciban el mismo tratamiento de datos y permite almacenar tanto el mejor modelo como el proceso de preprocesamiento para realizar futuras predicciones.

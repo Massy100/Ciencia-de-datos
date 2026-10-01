@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Massielle Coti">
+
+<title>modelo_predictivo_videojuegos</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="modelo_predictivo_videojuegos_files/libs/clipboard/clipboard.min.js"></script>
+<script src="modelo_predictivo_videojuegos_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="modelo_predictivo_videojuegos_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="modelo_predictivo_videojuegos_files/libs/quarto-html/popper.min.js"></script>
+<script src="modelo_predictivo_videojuegos_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="modelo_predictivo_videojuegos_files/libs/quarto-html/anchor.min.js"></script>
+<link href="modelo_predictivo_videojuegos_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="modelo_predictivo_videojuegos_files/libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="modelo_predictivo_videojuegos_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="modelo_predictivo_videojuegos_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="modelo_predictivo_videojuegos_files/libs/bootstrap/bootstrap-efbb37e9afcc02144ebbc7afd12a776f.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">modelo_predictivo_videojuegos</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Massielle Coti </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="carga-de-paquetes" class="level2">
+<h2 class="anchored" data-anchor-id="carga-de-paquetes">Carga de paquetes</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Cargamos librerias necesarias</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidymodels) <span class="co"># Para modelado</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ranger)     <span class="co"># Para Random Forest</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(xgboost)    <span class="co"># Para XGBoost</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(vip)        <span class="co"># Para importancia de variables</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Cargamos el dataset de videojuegos</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>videojuegos <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"vgsales.csv"</span>, <span class="at">show_col_types =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Revisamos la estructura del dataset</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(videojuegos)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 16,598
+Columns: 11
+$ Rank         &lt;dbl&gt; 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17…
+$ Name         &lt;chr&gt; "Wii Sports", "Super Mario Bros.", "Mario Kart Wii", "Wii…
+$ Platform     &lt;chr&gt; "Wii", "NES", "Wii", "Wii", "GB", "GB", "DS", "Wii", "Wii…
+$ Year         &lt;chr&gt; "2006", "1985", "2008", "2009", "1996", "1989", "2006", "…
+$ Genre        &lt;chr&gt; "Sports", "Platform", "Racing", "Sports", "Role-Playing",…
+$ Publisher    &lt;chr&gt; "Nintendo", "Nintendo", "Nintendo", "Nintendo", "Nintendo…
+$ NA_Sales     &lt;dbl&gt; 41.49, 29.08, 15.85, 15.75, 11.27, 23.20, 11.38, 14.03, 1…
+$ EU_Sales     &lt;dbl&gt; 29.02, 3.58, 12.88, 11.01, 8.89, 2.26, 9.23, 9.20, 7.06, …
+$ JP_Sales     &lt;dbl&gt; 3.77, 6.81, 3.79, 3.28, 10.22, 4.22, 6.50, 2.93, 4.70, 0.…
+$ Other_Sales  &lt;dbl&gt; 8.46, 0.77, 3.31, 2.96, 1.00, 0.58, 2.90, 2.85, 2.26, 0.4…
+$ Global_Sales &lt;dbl&gt; 82.74, 40.24, 35.82, 33.00, 31.37, 30.26, 30.01, 29.02, 2…</code></pre>
+</div>
+</div>
+</section>
+<section id="descripcion" class="level2">
+<h2 class="anchored" data-anchor-id="descripcion"><strong>Descripcion</strong></h2>
+<p><code>tidymodels</code> es el ecosistema estandar para Machine Learning en R. Unifica el preprocesamiento, modelado y evaluacion.</p>
+<p>El dataset <code>vgsales.csv</code> contiene informacion sobre ventas de videojuegos, incluyendo:</p>
+<ul>
+<li><code>Name</code>: nombre del videojuego.</li>
+<li><code>Platform</code>: plataforma.</li>
+<li><code>Year</code>: año de lanzamiento.</li>
+<li><code>Genre</code>: genero.</li>
+<li><code>Publisher</code>: distribuidor/editor.</li>
+<li><code>NA_Sales</code>: ventas en Norteamerica.</li>
+<li><code>EU_Sales</code>: ventas en Europa.</li>
+<li><code>JP_Sales</code>: ventas en Japon.</li>
+<li><code>Other_Sales</code>: ventas en otras regiones.</li>
+<li><code>Global_Sales</code>: ventas globales.</li>
+</ul>
+<p>En este modelo se intentara predecir <strong>Global_Sales</strong>, expresado en millones de copias.</p>
+<hr>
+</section>
+<section id="limpieza-inicial-del-dataset" class="level2">
+<h2 class="anchored" data-anchor-id="limpieza-inicial-del-dataset">Limpieza inicial del dataset</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Seleccionamos solamente las variables que utilizaremos</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>videojuegos_modelo <span class="ot">&lt;-</span> videojuegos <span class="sc">%&gt;%</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    Platform,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    Year,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    Genre,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    Publisher,</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    Global_Sales</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Convertimos Year a numerico por seguridad</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">Year =</span> <span class="fu">as.numeric</span>(Year),</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Publisher tiene algunos valores faltantes</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">Publisher =</span> <span class="fu">replace_na</span>(Publisher, <span class="st">"Desconocido"</span>)</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: There was 1 warning in `mutate()`.
+ℹ In argument: `Year = as.numeric(Year)`.
+Caused by warning:
+! NAs introduced by coercion</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Revisamos valores nulos</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">colSums</span>(<span class="fu">is.na</span>(videojuegos_modelo))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    Platform         Year        Genre    Publisher Global_Sales 
+           0          271            0            0            0 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Resumen estadistico</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(videojuegos_modelo)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>      Platform          Year            Genre           Publisher    
+ Length   :16598   Min.   :1980   Length   :16598   Length   :16598  
+ N.unique :   31   1st Qu.:2003   N.unique :   12   N.unique :  579  
+ N.blank  :    0   Median :2007   N.blank  :    0   N.blank  :    0  
+ Min.nchar:    2   Mean   :2006   Min.nchar:    4   Min.nchar:    3  
+ Max.nchar:    4   3rd Qu.:2010   Max.nchar:   12   Max.nchar:   38  
+                   Max.   :2020                                      
+                   NAs    :271                                       
+  Global_Sales    
+ Min.   : 0.0100  
+ 1st Qu.: 0.0600  
+ Median : 0.1700  
+ Mean   : 0.5374  
+ 3rd Qu.: 0.4700  
+ Max.   :82.7400  
+                  </code></pre>
+</div>
+</div>
+<p><strong>Descripcion</strong></p>
+<p>Se seleccionan las variables que se utilizaran para construir el modelo predictivo.</p>
+<p>Los valores faltantes de <code>Publisher</code> se convierten a la categoria <code>"Desconocido"</code>. Los valores faltantes de <code>Year</code> se trataran posteriormente dentro de la receta mediante imputacion.</p>
+<hr>
+</section>
+<section id="exploracion-de-las-ventas-globales" class="level2">
+<h2 class="anchored" data-anchor-id="exploracion-de-las-ventas-globales">Exploracion de las ventas globales</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(videojuegos_modelo, <span class="fu">aes</span>(<span class="at">x =</span> Global_Sales)) <span class="sc">+</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">50</span>, <span class="at">fill =</span> <span class="st">"steelblue"</span>, <span class="at">color =</span> <span class="st">"white"</span>) <span class="sc">+</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Distribucion de las ventas globales"</span>,</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Ventas globales (millones)"</span>,</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Frecuencia"</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="modelo_predictivo_videojuegos_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>Descripcion</strong></p>
+<p>La variable <code>Global_Sales</code> presenta una distribucion sesgada hacia la derecha: existen muchos videojuegos con ventas pequeñas y pocos titulos con ventas extremadamente altas.</p>
+<p>Por esta razon, durante el preprocesamiento se aplicara una transformacion logaritmica a la variable objetivo.</p>
+<hr>
+</section>
+<section id="division-en-conjunto-de-entrenamientopruebas-traintest" class="level2">
+<h2 class="anchored" data-anchor-id="division-en-conjunto-de-entrenamientopruebas-traintest">Division en conjunto de Entrenamiento/Pruebas (Train/Test)</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Semilla para reproducir el modelo</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">202697</span>)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Dividimos el conjunto: 80% entrenamiento y 20% pruebas</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(videojuegos_modelo, <span class="at">prop =</span> <span class="fl">0.8</span>)</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>train <span class="ot">&lt;-</span> <span class="fu">training</span>(split)</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>test <span class="ot">&lt;-</span> <span class="fu">testing</span>(split)</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Verificamos dimensiones</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(train)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 13278     5</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(test)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 3320    5</code></pre>
+</div>
+</div>
+<p><strong>Descripcion</strong></p>
+<p>Separamos los datos para evitar contaminar el modelo con informacion del conjunto de prueba.</p>
+<p>El modelo aprendera utilizando unicamente el conjunto de entrenamiento y posteriormente sera evaluado con datos que no ha visto anteriormente.</p>
+<hr>
+</section>
+<section id="preparacion-de-la-receta" class="level2">
+<h2 class="anchored" data-anchor-id="preparacion-de-la-receta">Preparacion de la receta</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Establecemos la relacion para el modelo</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>receta <span class="ot">&lt;-</span> <span class="fu">recipe</span>(</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  Global_Sales <span class="sc">~</span> Platform <span class="sc">+</span> Year <span class="sc">+</span> Genre <span class="sc">+</span> Publisher,</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> train</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Imputamos los años faltantes con la mediana</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_impute_median</span>(Year) <span class="sc">%&gt;%</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Agrupamos publishers poco frecuentes en la categoria "other"</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>  <span class="co"># para evitar crear cientos de columnas dummy</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_other</span>(Publisher, <span class="at">threshold =</span> <span class="fl">0.01</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Convierte posibles categorias desconocidas en "unknown"</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_unknown</span>(<span class="fu">all_nominal_predictors</span>()) <span class="sc">%&gt;%</span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Convertimos variables categoricas a numericas</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_dummy</span>(<span class="fu">all_nominal_predictors</span>()) <span class="sc">%&gt;%</span></span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Normalizamos las variables numericas predictoras</span></span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_normalize</span>(<span class="fu">all_numeric_predictors</span>()) <span class="sc">%&gt;%</span></span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Aplicamos log10 a las ventas globales</span></span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_log</span>(Global_Sales, <span class="at">base =</span> <span class="dv">10</span>)</span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a><span class="co"># Preparamos la receta</span></span>
+<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a>prep_receta <span class="ot">&lt;-</span> <span class="fu">prep</span>(receta)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: !  The following columns have zero variance so scaling cannot be used:
+  Platform_unknown, Genre_unknown, and Publisher_unknown.
+ℹ Consider using ?step_zv (`?recipes::step_zv()`) to remove those columns
+  before normalizing.</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Aplicamos la receta a entrenamiento y prueba</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>train_prep <span class="ot">&lt;-</span> <span class="fu">bake</span>(prep_receta, <span class="at">new_data =</span> <span class="cn">NULL</span>)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>test_prep <span class="ot">&lt;-</span> <span class="fu">bake</span>(prep_receta, <span class="at">new_data =</span> test)</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Verificamos dimensiones y estructura</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(train_prep)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 13278    70</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(train_prep)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 13,278
+Columns: 70
+$ Year                                             &lt;dbl&gt; 0.2727255, -1.9624010…
+$ Global_Sales                                     &lt;dbl&gt; -1.045757491, -1.0969…
+$ Platform_X3DO                                    &lt;dbl&gt; -0.01503235, -0.01503…
+$ Platform_X3DS                                    &lt;dbl&gt; -0.1744085, -0.174408…
+$ Platform_DC                                      &lt;dbl&gt; -0.05699751, -0.05699…
+$ Platform_DS                                      &lt;dbl&gt; -0.3847193, -0.384719…
+$ Platform_GB                                      &lt;dbl&gt; -0.0783409, -0.078340…
+$ Platform_GBA                                     &lt;dbl&gt; -0.2294253, -0.229425…
+$ Platform_GC                                      &lt;dbl&gt; -0.1928183, -0.192818…
+$ Platform_GEN                                     &lt;dbl&gt; -0.03785341, -0.03785…
+$ Platform_GG                                      &lt;dbl&gt; -0.00867828, -0.00867…
+$ Platform_N64                                     &lt;dbl&gt; -0.1382381, -0.138238…
+$ Platform_NES                                     &lt;dbl&gt; -0.07882599, -0.07882…
+$ Platform_NG                                      &lt;dbl&gt; -0.02604269, -0.02604…
+$ Platform_PC                                      &lt;dbl&gt; -0.2465618, -0.246561…
+$ Platform_PCFX                                    &lt;dbl&gt; -0.00867828, -0.00867…
+$ Platform_PS                                      &lt;dbl&gt; -0.2774296, 3.6042463…
+$ Platform_PS2                                     &lt;dbl&gt; -0.3842031, -0.384203…
+$ Platform_PS3                                     &lt;dbl&gt; -0.2979936, -0.297993…
+$ Platform_PS4                                     &lt;dbl&gt; -0.1454214, -0.145421…
+$ Platform_PSP                                     &lt;dbl&gt; 3.5819385, -0.2791574…
+$ Platform_PSV                                     &lt;dbl&gt; -0.1611212, -0.161121…
+$ Platform_SAT                                     &lt;dbl&gt; -0.1058019, -0.105801…
+$ Platform_SCD                                     &lt;dbl&gt; -0.01940815, -0.01940…
+$ Platform_SNES                                    &lt;dbl&gt; -0.1198375, -0.119837…
+$ Platform_TG16                                    &lt;dbl&gt; -0.0122734, -0.012273…
+$ Platform_Wii                                     &lt;dbl&gt; -0.2955903, -0.295590…
+$ Platform_WiiU                                    &lt;dbl&gt; -0.09509237, -0.09509…
+$ Platform_WS                                      &lt;dbl&gt; -0.01940815, -0.01940…
+$ Platform_X360                                    &lt;dbl&gt; -0.2852232, -0.285223…
+$ Platform_XB                                      &lt;dbl&gt; -0.2292434, -0.229243…
+$ Platform_XOne                                    &lt;dbl&gt; -0.113878, -0.113878,…
+$ Platform_unknown                                 &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, …
+$ Genre_Adventure                                  &lt;dbl&gt; -0.291048, -0.291048,…
+$ Genre_Fighting                                   &lt;dbl&gt; -0.2312381, -0.231238…
+$ Genre_Misc                                       &lt;dbl&gt; -0.3388994, -0.338899…
+$ Genre_Platform                                   &lt;dbl&gt; -0.2399631, -0.239963…
+$ Genre_Puzzle                                     &lt;dbl&gt; -0.186857, -0.186857,…
+$ Genre_Racing                                     &lt;dbl&gt; -0.2892174, -0.289217…
+$ Genre_Role.Playing                               &lt;dbl&gt; -0.3121518, -0.312151…
+$ Genre_Shooter                                    &lt;dbl&gt; 3.4019100, -0.2939304…
+$ Genre_Simulation                                 &lt;dbl&gt; -0.2353653, 4.2483945…
+$ Genre_Sports                                     &lt;dbl&gt; -0.4061143, -0.406114…
+$ Genre_Strategy                                   &lt;dbl&gt; -0.2066811, -0.206681…
+$ Genre_unknown                                    &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, …
+$ Publisher_Acclaim.Entertainment                  &lt;dbl&gt; -0.1079642, -0.107964…
+$ Publisher_Activision                             &lt;dbl&gt; -0.2496403, -0.249640…
+$ Publisher_Atari                                  &lt;dbl&gt; -0.1502092, -0.150209…
+$ Publisher_Capcom                                 &lt;dbl&gt; -0.1528098, -0.152809…
+$ Publisher_D3Publisher                            &lt;dbl&gt; -0.1065273, -0.106527…
+$ Publisher_Disney.Interactive.Studios             &lt;dbl&gt; -0.1125131, -0.112513…
+$ Publisher_Eidos.Interactive                      &lt;dbl&gt; -0.1086758, -0.108675…
+$ Publisher_Electronic.Arts                        &lt;dbl&gt; -0.2984428, -0.298442…
+$ Publisher_Konami.Digital.Entertainment           &lt;dbl&gt; -0.2277839, -0.227783…
+$ Publisher_Microsoft.Game.Studios                 &lt;dbl&gt; -0.1050717, -0.105071…
+$ Publisher_Midway.Games                           &lt;dbl&gt; -0.109735, -0.109735,…
+$ Publisher_Namco.Bandai.Games                     &lt;dbl&gt; -0.2472485, -0.247248…
+$ Publisher_Nintendo                               &lt;dbl&gt; -0.212554, -0.212554,…
+$ Publisher_Sega                                   &lt;dbl&gt; -0.1986257, -0.198625…
+$ Publisher_Sony.Computer.Entertainment            &lt;dbl&gt; -0.2094388, -0.209438…
+$ Publisher_Square.Enix                            &lt;dbl&gt; 8.2993387, -0.1204825…
+$ Publisher_Take.Two.Interactive                   &lt;dbl&gt; -0.1618576, -0.161857…
+$ Publisher_Tecmo.Koei                             &lt;dbl&gt; -0.1451511, -0.145151…
+$ Publisher_THQ                                    &lt;dbl&gt; -0.2100258, -0.210025…
+$ Publisher_Ubisoft                                &lt;dbl&gt; -0.2389082, -0.238908…
+$ Publisher_Unknown                                &lt;dbl&gt; -0.1104358, -0.110435…
+$ Publisher_Vivendi.Games                          &lt;dbl&gt; -0.1017238, -0.101723…
+$ Publisher_Warner.Bros..Interactive.Entertainment &lt;dbl&gt; -0.1201604, -0.120160…
+$ Publisher_other                                  &lt;dbl&gt; -0.6707056, 1.4908548…
+$ Publisher_unknown                                &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, …</code></pre>
+</div>
+</div>
+<p><strong>Descripcion</strong></p>
+<p>La receta realiza varias tareas automaticamente:</p>
+<ul>
+<li>Imputa los años faltantes utilizando la mediana.</li>
+<li>Agrupa publishers poco frecuentes.</li>
+<li>Convierte variables categoricas a variables dummy.</li>
+<li>Normaliza variables numericas.</li>
+<li>Aplica <code>log10(Global_Sales)</code> para reducir el efecto de valores extremadamente altos.</li>
+</ul>
+<p>Todos los modelos utilizaran exactamente la misma receta.</p>
+<hr>
+</section>
+<section id="entrenamiento-de-3-modelos" class="level2">
+<h2 class="anchored" data-anchor-id="entrenamiento-de-3-modelos">Entrenamiento de 3 modelos</h2>
+<section id="modelo-1-regresion-lineal-baseline" class="level3">
+<h3 class="anchored" data-anchor-id="modelo-1-regresion-lineal-baseline">Modelo 1: Regresion Lineal (baseline)</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>lm_model <span class="ot">&lt;-</span> <span class="fu">linear_reg</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">"lm"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>)</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>lm_fit <span class="ot">&lt;-</span> lm_model <span class="sc">%&gt;%</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit</span>(Global_Sales <span class="sc">~</span> ., <span class="at">data =</span> train_prep)</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>lm_fit</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>parsnip model object
+
+
+Call:
+stats::lm(formula = Global_Sales ~ ., data = data)
+
+Coefficients:
+                                     (Intercept)  
+                                      -0.7557377  
+                                            Year  
+                                      -0.1372928  
+                                   Platform_X3DO  
+                                      -0.0114059  
+                                   Platform_X3DS  
+                                       0.0021535  
+                                     Platform_DC  
+                                      -0.0111735  
+                                     Platform_DS  
+                                      -0.0339788  
+                                     Platform_GB  
+                                       0.0115790  
+                                    Platform_GBA  
+                                      -0.0461603  
+                                     Platform_GC  
+                                      -0.0496666  
+                                    Platform_GEN  
+                                      -0.0030404  
+                                     Platform_GG  
+                                      -0.0098159  
+                                    Platform_N64  
+                                      -0.0038158  
+                                    Platform_NES  
+                                       0.0151905  
+                                     Platform_NG  
+                                      -0.0081096  
+                                     Platform_PC  
+                                      -0.0894690  
+                                   Platform_PCFX  
+                                      -0.0076281  
+                                     Platform_PS  
+                                       0.0012883  
+                                    Platform_PS2  
+                                       0.0177796  
+                                    Platform_PS3  
+                                       0.0648703  
+                                    Platform_PS4  
+                                       0.0403332  
+                                    Platform_PSP  
+                                      -0.0369335  
+                                    Platform_PSV  
+                                      -0.0137765  
+                                    Platform_SAT  
+                                      -0.0299431  
+                                    Platform_SCD  
+                                      -0.0096193  
+                                   Platform_SNES  
+                                      -0.0005501  
+                                   Platform_TG16  
+                                      -0.0055623  
+                                    Platform_Wii  
+                                       0.0274366  
+                                   Platform_WiiU  
+                                      -0.0016630  
+                                     Platform_WS  
+                                      -0.0006329  
+                                   Platform_X360  
+                                       0.0512689  
+                                     Platform_XB  
+                                      -0.0480586  
+                                   Platform_XOne  
+                                       0.0264671  
+                                Platform_unknown  
+                                              NA  
+                                 Genre_Adventure  
+                                      -0.0692372  
+                                  Genre_Fighting  
+                                       0.0138113  
+                                      Genre_Misc  
+                                      -0.0119472  
+                                  Genre_Platform  
+                                       0.0108152  
+                                    Genre_Puzzle  
+                                      -0.0216346  
+                                    Genre_Racing  
+                                      -0.0063509  
+                              Genre_Role.Playing  
+                                       0.0291041  
+                                   Genre_Shooter  
+                                       0.0153824  
+                                Genre_Simulation  
+                                      -0.0012534  
+                                    Genre_Sports  
+                                      -0.0158487  
+                                  Genre_Strategy  
+                                      -0.0230092  
+                                   Genre_unknown  
+                                              NA  
+                 Publisher_Acclaim.Entertainment  
+                                       0.0109042  
+                            Publisher_Activision  
+                                       0.0876797  
+                                 Publisher_Atari  
+                                       0.0228770  
+                                Publisher_Capcom  
+                                       0.0268276  
+                           Publisher_D3Publisher  
+                                      -0.0172221  
+            Publisher_Disney.Interactive.Studios  
+                                       0.0580855  
+                     Publisher_Eidos.Interactive  
+                                       0.0171228  
+                       Publisher_Electronic.Arts  
+                                       0.1545075  
+          Publisher_Konami.Digital.Entertainment  
+                                       0.0163430  
+                Publisher_Microsoft.Game.Studios  
+                                       0.0543932  
+                          Publisher_Midway.Games  
+                                       0.0214507  
+                    Publisher_Namco.Bandai.Games  
+                                       0.0043805  
+                              Publisher_Nintendo  
+                                       0.1583220  
+                                  Publisher_Sega  
+                                       0.0436220  
+           Publisher_Sony.Computer.Entertainment  
+                                       0.0758246  
+                           Publisher_Square.Enix  
+                                       0.0448129  
+                  Publisher_Take.Two.Interactive  
+                                       0.0735211  
+                            Publisher_Tecmo.Koei  
+                                      -0.0265193  
+                                   Publisher_THQ  
+                                       0.0749035  
+                               Publisher_Ubisoft  
+                                       0.0621054  
+                               Publisher_Unknown  
+                                      -0.0105003  
+                         Publisher_Vivendi.Games  
+                                       0.0205057  
+Publisher_Warner.Bros..Interactive.Entertainment  
+                                       0.0640281  
+                                 Publisher_other  
+                                      -0.0504250  
+                               Publisher_unknown  
+                                              NA  </code></pre>
+</div>
+</div>
+<p>La regresion lineal funciona como modelo base. Es rapido, sencillo y permite tener un punto de comparacion para modelos mas complejos.</p>
+<hr>
+</section>
+<section id="modelo-2-random-forest" class="level3">
+<h3 class="anchored" data-anchor-id="modelo-2-random-forest">Modelo 2: Random Forest</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Definimos el modelo Random Forest para regresion</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>rf_model <span class="ot">&lt;-</span> <span class="fu">rand_forest</span>(</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">trees =</span> <span class="dv">500</span>,</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">min_n =</span> <span class="dv">5</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">"ranger"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>)</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Entrenamos el modelo</span></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>rf_fit <span class="ot">&lt;-</span> rf_model <span class="sc">%&gt;%</span></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit</span>(Global_Sales <span class="sc">~</span> ., <span class="at">data =</span> train_prep)</span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>rf_fit</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>parsnip model object
+
+Ranger result
+
+Call:
+ ranger::ranger(x = maybe_data_frame(x), y = y, num.trees = ~500,      min.node.size = min_rows(~5, x), num.threads = 1, verbose = FALSE,      seed = sample.int(10^5, 1)) 
+
+Type:                             Regression 
+Number of trees:                  500 
+Sample size:                      13278 
+Number of independent variables:  69 
+Mtry:                             8 
+Target node size:                 5 
+Variable importance mode:         none 
+Splitrule:                        variance 
+OOB prediction error (MSE):       0.2544207 
+R squared (OOB):                  0.3696131 </code></pre>
+</div>
+</div>
+<p>Random Forest utiliza multiples arboles de decision y combina sus resultados. Es capaz de modelar relaciones no lineales y suele ser resistente al sobreajuste.</p>
+<hr>
+</section>
+<section id="modelo-3-xgboost" class="level3">
+<h3 class="anchored" data-anchor-id="modelo-3-xgboost">Modelo 3: XGBoost</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Definimos el modelo XGBoost</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>xgb_model <span class="ot">&lt;-</span> <span class="fu">boost_tree</span>(</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">trees =</span> <span class="dv">500</span>,</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">tree_depth =</span> <span class="dv">6</span>,</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">learn_rate =</span> <span class="fl">0.05</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">"xgboost"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>)</span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Entrenamos el modelo</span></span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>xgb_fit <span class="ot">&lt;-</span> xgb_model <span class="sc">%&gt;%</span></span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit</span>(Global_Sales <span class="sc">~</span> ., <span class="at">data =</span> train_prep)</span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>xgb_fit</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>parsnip model object
+
+##### xgb.Booster
+call:
+  xgboost::xgb.train(params = list(eta = 0.05, max_depth = 6, gamma = 0, 
+    colsample_bytree = 1, colsample_bynode = 1, min_child_weight = 1, 
+    subsample = 1, nthread = 1, objective = "reg:squarederror"), 
+    data = x$data, nrounds = 500, evals = x$watchlist, verbose = 0)
+# of features: 69 
+# of rounds:  500 
+callbacks:
+   evaluation_log 
+evaluation_log:
+  iter training_rmse
+ &lt;num&gt;         &lt;num&gt;
+     1     0.6269293
+     2     0.6194147
+   ---           ---
+   499     0.4483712
+   500     0.4483409</code></pre>
+</div>
+</div>
+<p>XGBoost utiliza <em>boosting</em>: cada nuevo arbol intenta corregir los errores cometidos por los anteriores.</p>
+</section>
+<section id="enfoques-utilizados" class="level3">
+<h3 class="anchored" data-anchor-id="enfoques-utilizados">Enfoques utilizados</h3>
+<ul>
+<li><strong>Regresion Lineal:</strong> rapido y simple.</li>
+<li><strong>Random Forest:</strong> utiliza muchos arboles y captura relaciones no lineales.</li>
+<li><strong>XGBoost:</strong> algoritmo de boosting muy utilizado para datos tabulares.</li>
+</ul>
+</section>
+</section>
+<section id="todos-utilizan-la-misma-receta" class="level2">
+<h2 class="anchored" data-anchor-id="todos-utilizan-la-misma-receta">Todos utilizan la misma receta</h2>
+<hr>
+</section>
+<section id="evaluacion-y-comparacion-de-los-modelos" class="level2">
+<h2 class="anchored" data-anchor-id="evaluacion-y-comparacion-de-los-modelos">Evaluacion y comparacion de los modelos</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Funcion para calcular metricas</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>evaluar_modelo <span class="ot">&lt;-</span> <span class="cf">function</span>(modelo, datos_test, nombre){</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>  preds <span class="ot">&lt;-</span> <span class="fu">predict</span>(modelo, <span class="at">new_data =</span> datos_test) <span class="sc">%&gt;%</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">bind_cols</span>(</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>      datos_test <span class="sc">%&gt;%</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>        <span class="fu">select</span>(Global_Sales)</span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Global_Sales se encuentra en log10 dentro de test_prep.</span></span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Regresamos prediccion y valor real a la escala original.</span></span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a>  preds <span class="ot">&lt;-</span> preds <span class="sc">%&gt;%</span></span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a>      <span class="at">prediccion_real =</span> <span class="dv">10</span><span class="sc">^</span>.pred,</span>
+<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a>      <span class="at">Global_Sales_real =</span> <span class="dv">10</span><span class="sc">^</span>Global_Sales</span>
+<span id="cb26-16"><a href="#cb26-16" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb26-17"><a href="#cb26-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-18"><a href="#cb26-18" aria-hidden="true" tabindex="-1"></a>  metricas <span class="ot">&lt;-</span> preds <span class="sc">%&gt;%</span></span>
+<span id="cb26-19"><a href="#cb26-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">metrics</span>(</span>
+<span id="cb26-20"><a href="#cb26-20" aria-hidden="true" tabindex="-1"></a>      <span class="at">truth =</span> Global_Sales_real,</span>
+<span id="cb26-21"><a href="#cb26-21" aria-hidden="true" tabindex="-1"></a>      <span class="at">estimate =</span> prediccion_real</span>
+<span id="cb26-22"><a href="#cb26-22" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb26-23"><a href="#cb26-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-24"><a href="#cb26-24" aria-hidden="true" tabindex="-1"></a>  metricas <span class="sc">%&gt;%</span></span>
+<span id="cb26-25"><a href="#cb26-25" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">modelo =</span> nombre)</span>
+<span id="cb26-26"><a href="#cb26-26" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb26-27"><a href="#cb26-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-28"><a href="#cb26-28" aria-hidden="true" tabindex="-1"></a><span class="co"># Evaluacion de los 3 modelos</span></span>
+<span id="cb26-29"><a href="#cb26-29" aria-hidden="true" tabindex="-1"></a>metricas_lm <span class="ot">&lt;-</span> <span class="fu">evaluar_modelo</span>(</span>
+<span id="cb26-30"><a href="#cb26-30" aria-hidden="true" tabindex="-1"></a>  lm_fit,</span>
+<span id="cb26-31"><a href="#cb26-31" aria-hidden="true" tabindex="-1"></a>  test_prep,</span>
+<span id="cb26-32"><a href="#cb26-32" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Regresion Lineal"</span></span>
+<span id="cb26-33"><a href="#cb26-33" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in predict.lm(object = object$fit, newdata = new_data, type =
+"response", : prediction from rank-deficient fit; consider predict(.,
+rankdeficient="NA")</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>metricas_rf <span class="ot">&lt;-</span> <span class="fu">evaluar_modelo</span>(</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>  rf_fit,</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>  test_prep,</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Random Forest"</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>metricas_xgb <span class="ot">&lt;-</span> <span class="fu">evaluar_modelo</span>(</span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>  xgb_fit,</span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>  test_prep,</span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>  <span class="st">"XGBoost"</span></span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Unimos los resultados</span></span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a>comparacion <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(</span>
+<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a>  metricas_lm,</span>
+<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a>  metricas_rf,</span>
+<span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a>  metricas_xgb</span>
+<span id="cb28-18"><a href="#cb28-18" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-20"><a href="#cb28-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Mostramos RMSE y R2</span></span>
+<span id="cb28-21"><a href="#cb28-21" aria-hidden="true" tabindex="-1"></a>tabla_comparacion <span class="ot">&lt;-</span> comparacion <span class="sc">%&gt;%</span></span>
+<span id="cb28-22"><a href="#cb28-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(.metric <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"rmse"</span>, <span class="st">"rsq"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb28-23"><a href="#cb28-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(modelo, .metric, .estimate) <span class="sc">%&gt;%</span></span>
+<span id="cb28-24"><a href="#cb28-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(</span>
+<span id="cb28-25"><a href="#cb28-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_from =</span> .metric,</span>
+<span id="cb28-26"><a href="#cb28-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">values_from =</span> .estimate</span>
+<span id="cb28-27"><a href="#cb28-27" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb28-28"><a href="#cb28-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(rmse)</span>
+<span id="cb28-29"><a href="#cb28-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-30"><a href="#cb28-30" aria-hidden="true" tabindex="-1"></a>tabla_comparacion</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 3
+  modelo            rmse   rsq
+  &lt;chr&gt;            &lt;dbl&gt; &lt;dbl&gt;
+1 XGBoost           1.15 0.155
+2 Regresion Lineal  1.17 0.135
+3 Random Forest     1.17 0.168</code></pre>
+</div>
+</div>
+<section id="interpretacion-de-las-metricas" class="level3">
+<h3 class="anchored" data-anchor-id="interpretacion-de-las-metricas">Interpretacion de las metricas</h3>
+<p><strong>RMSE</strong> indica el error promedio del modelo expresado aproximadamente en millones de copias vendidas.</p>
+<p><strong>R²</strong> indica que proporcion de la variabilidad de las ventas globales puede explicar el modelo.</p>
+<p>Un modelo presenta mejor desempeño cuando tiene:</p>
+<ul>
+<li><strong>Menor RMSE</strong></li>
+<li><strong>Mayor R²</strong></li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="comparacion-grafica-de-modelos" class="level2">
+<h2 class="anchored" data-anchor-id="comparacion-grafica-de-modelos">Comparacion grafica de modelos</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>comparacion <span class="sc">%&gt;%</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">"rmse"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>      <span class="at">x =</span> <span class="fu">reorder</span>(modelo, .estimate),</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>      <span class="at">y =</span> .estimate,</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>      <span class="at">fill =</span> modelo</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">show.legend =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Comparacion del RMSE de los modelos"</span>,</span>
+<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Modelo"</span>,</span>
+<span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"RMSE"</span></span>
+<span id="cb30-16"><a href="#cb30-16" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb30-17"><a href="#cb30-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="modelo_predictivo_videojuegos_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>Descripcion</strong></p>
+<p>La grafica permite comparar visualmente el error obtenido por cada algoritmo. El modelo con la barra mas pequeña posee el menor RMSE.</p>
+<hr>
+</section>
+<section id="seleccion-automatica-del-mejor-modelo" class="level2">
+<h2 class="anchored" data-anchor-id="seleccion-automatica-del-mejor-modelo">Seleccion automatica del mejor modelo</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Identificamos el modelo con menor RMSE</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>nombre_mejor <span class="ot">&lt;-</span> tabla_comparacion <span class="sc">%&gt;%</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_min</span>(rmse, <span class="at">n =</span> <span class="dv">1</span>, <span class="at">with_ties =</span> <span class="cn">FALSE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(modelo)</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>nombre_mejor</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "XGBoost"</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Seleccionamos el objeto correspondiente</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>mejor_modelo <span class="ot">&lt;-</span> <span class="cf">switch</span>(</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>  nombre_mejor,</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Regresion Lineal"</span> <span class="ot">=</span> lm_fit,</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Random Forest"</span> <span class="ot">=</span> rf_fit,</span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">"XGBoost"</span> <span class="ot">=</span> xgb_fit</span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>mejor_modelo</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>parsnip model object
+
+##### xgb.Booster
+call:
+  xgboost::xgb.train(params = list(eta = 0.05, max_depth = 6, gamma = 0, 
+    colsample_bytree = 1, colsample_bynode = 1, min_child_weight = 1, 
+    subsample = 1, nthread = 1, objective = "reg:squarederror"), 
+    data = x$data, nrounds = 500, evals = x$watchlist, verbose = 0)
+# of features: 69 
+# of rounds:  500 
+callbacks:
+   evaluation_log 
+evaluation_log:
+  iter training_rmse
+ &lt;num&gt;         &lt;num&gt;
+     1     0.6269293
+     2     0.6194147
+   ---           ---
+   499     0.4483712
+   500     0.4483409</code></pre>
+</div>
+</div>
+<p><strong>Descripcion</strong></p>
+<p>En lugar de asumir de antemano cual algoritmo sera mejor, se selecciona automaticamente el que obtenga el menor RMSE en el conjunto de prueba.</p>
+<hr>
+</section>
+<section id="importancia-de-variables" class="level2">
+<h2 class="anchored" data-anchor-id="importancia-de-variables">Importancia de variables</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Para obtener importancia de variables entrenamos una version</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="co"># de Random Forest que calcule importancia por permutacion.</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>rf_importancia_model <span class="ot">&lt;-</span> <span class="fu">rand_forest</span>(</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">trees =</span> <span class="dv">500</span>,</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">min_n =</span> <span class="dv">5</span></span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(</span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"ranger"</span>,</span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">importance =</span> <span class="st">"permutation"</span></span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>)</span>
+<span id="cb35-13"><a href="#cb35-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-14"><a href="#cb35-14" aria-hidden="true" tabindex="-1"></a>rf_importancia_fit <span class="ot">&lt;-</span> rf_importancia_model <span class="sc">%&gt;%</span></span>
+<span id="cb35-15"><a href="#cb35-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit</span>(Global_Sales <span class="sc">~</span> ., <span class="at">data =</span> train_prep)</span>
+<span id="cb35-16"><a href="#cb35-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-17"><a href="#cb35-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Grafica de importancia</span></span>
+<span id="cb35-18"><a href="#cb35-18" aria-hidden="true" tabindex="-1"></a><span class="fu">vip</span>(</span>
+<span id="cb35-19"><a href="#cb35-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">extract_fit_engine</span>(rf_importancia_fit),</span>
+<span id="cb35-20"><a href="#cb35-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">num_features =</span> <span class="dv">15</span></span>
+<span id="cb35-21"><a href="#cb35-21" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="modelo_predictivo_videojuegos_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>Descripcion</strong></p>
+<p>La importancia de variables ayuda a identificar que caracteristicas contribuyen mas a las predicciones del modelo.</p>
+<p>Debido a que las variables categoricas fueron convertidas a columnas dummy, pueden aparecer plataformas, generos o publishers especificos entre las variables mas importantes.</p>
+<hr>
+</section>
+<section id="guardado-del-mejor-modelo-y-la-receta" class="level2">
+<h2 class="anchored" data-anchor-id="guardado-del-mejor-modelo-y-la-receta">Guardado del mejor modelo y la receta</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Guardamos el mejor modelo</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>  mejor_modelo,</span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"mejor_modelo_videojuegos.rds"</span></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Guardamos tambien la receta</span></span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(</span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>  prep_receta,</span>
+<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a>  <span class="st">"receta_videojuegos.rds"</span></span>
+<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Los archivos <code>.rds</code> permiten reutilizar posteriormente el modelo sin necesidad de entrenarlo nuevamente.</p>
+<hr>
+</section>
+<section id="prediccion-de-un-nuevo-videojuego" class="level2">
+<h2 class="anchored" data-anchor-id="prediccion-de-un-nuevo-videojuego">Prediccion de un nuevo videojuego</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Simulamos un nuevo videojuego</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>nuevo_videojuego <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">Platform =</span> <span class="st">"PS4"</span>,</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">Year =</span> <span class="dv">2016</span>,</span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">Genre =</span> <span class="st">"Action"</span>,</span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">Publisher =</span> <span class="st">"Electronic Arts"</span>,</span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">Global_Sales =</span> <span class="cn">NA_real_</span></span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Como Global_Sales es la variable objetivo y se transforma con log,</span></span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a><span class="co"># aplicamos la receta permitiendo que el resultado sea desconocido.</span></span>
+<span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a>nuevo_prep <span class="ot">&lt;-</span> <span class="fu">bake</span>(</span>
+<span id="cb37-13"><a href="#cb37-13" aria-hidden="true" tabindex="-1"></a>  prep_receta,</span>
+<span id="cb37-14"><a href="#cb37-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">new_data =</span> nuevo_videojuego,</span>
+<span id="cb37-15"><a href="#cb37-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">composition =</span> <span class="st">"tibble"</span></span>
+<span id="cb37-16"><a href="#cb37-16" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb37-17"><a href="#cb37-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-18"><a href="#cb37-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Realizamos la prediccion en escala logaritmica</span></span>
+<span id="cb37-19"><a href="#cb37-19" aria-hidden="true" tabindex="-1"></a>prediccion <span class="ot">&lt;-</span> <span class="fu">predict</span>(</span>
+<span id="cb37-20"><a href="#cb37-20" aria-hidden="true" tabindex="-1"></a>  mejor_modelo,</span>
+<span id="cb37-21"><a href="#cb37-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">new_data =</span> nuevo_prep</span>
+<span id="cb37-22"><a href="#cb37-22" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb37-23"><a href="#cb37-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-24"><a href="#cb37-24" aria-hidden="true" tabindex="-1"></a><span class="co"># Regresamos la prediccion a millones de copias</span></span>
+<span id="cb37-25"><a href="#cb37-25" aria-hidden="true" tabindex="-1"></a>prediccion <span class="ot">&lt;-</span> prediccion <span class="sc">%&gt;%</span></span>
+<span id="cb37-26"><a href="#cb37-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb37-27"><a href="#cb37-27" aria-hidden="true" tabindex="-1"></a>    <span class="at">ventas_globales_estimadas_millones =</span> <span class="dv">10</span><span class="sc">^</span>.pred</span>
+<span id="cb37-28"><a href="#cb37-28" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb37-29"><a href="#cb37-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-30"><a href="#cb37-30" aria-hidden="true" tabindex="-1"></a>prediccion</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 2
+   .pred ventas_globales_estimadas_millones
+   &lt;dbl&gt;                              &lt;dbl&gt;
+1 -0.306                              0.495</code></pre>
+</div>
+</div>
+<p><strong>Descripcion</strong></p>
+<p>El ejemplo simula un videojuego de accion publicado para PS4 en 2016 por Electronic Arts.</p>
+<p>El modelo utiliza sus caracteristicas para estimar <code>Global_Sales</code>.</p>
+<p>La prediccion final se convierte nuevamente desde escala logaritmica a la escala original, por lo que el resultado representa aproximadamente <strong>millones de copias vendidas</strong>.</p>
+<hr>
+</section>
+<section id="conclusion" class="level2">
+<h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
+<p>El documento construye y compara tres modelos predictivos para estimar las ventas globales de videojuegos:</p>
+<ol type="1">
+<li>Regresion Lineal.</li>
+<li>Random Forest.</li>
+<li>XGBoost.</li>
+</ol>
+<p>Los modelos utilizan como variables predictoras la plataforma, año, genero y publisher del videojuego.</p>
+<p>La comparacion mediante RMSE y R² permite determinar cual de los tres modelos obtiene el mejor rendimiento con datos que no fueron utilizados durante el entrenamiento.</p>
+<p>El uso de una receta comun garantiza que los tres algoritmos reciban el mismo tratamiento de datos y permite almacenar tanto el mejor modelo como el proceso de preprocesamiento para realizar futuras predicciones.</p>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
