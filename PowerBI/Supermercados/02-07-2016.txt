@@ -1,0 +1,23 @@
+Producto	Cantidad (g/ml)	Categoria	Unidades Vendidas	Precio Unitario	Costo Unidad	Fecha
+Pasta	250	Alimentos	41	4	3	02/07/2016
+Spaguetti	250	Alimentos	39	3.5	2.5	02/07/2016
+Cereal	400	Alimentos	40	5	4	02/07/2016
+Fríjol	500	Alimentos	31	4	3	02/07/2016
+Mantequilla	250	Alimentos	33	7	6	02/07/2016
+Queso	500	Alimentos	26	4	2.5	02/07/2016
+Chocolate	1000	Alimentos	42	7	5.5	02/07/2016
+Café	200	Alimentos	34	6	5	02/07/2016
+Azúcar	1000	Alimentos	27	5	4	02/07/2016
+Sal	1000	Alimentos	28	5	3.9	02/07/2016
+Arroz	500	Alimentos	31	6	5	02/07/2016
+Lentejas	500	Alimentos	40	7	5	02/07/2016
+Pan	500	Alimentos	27	4	2	02/07/2016
+Jamón	300	Alimentos	31	7	5	02/07/2016
+Carne	500	Alimentos	35	9	7	02/07/2016
+Pollo	500	Alimentos	30	10	8	02/07/2016
+Leche	1000	Bebidas 42	4	4	2	02/07/2016
+Cerveza	350	Bebidas 33	5	5	4	02/07/2016
+Jugo	350	Bebidas 36	5	5	4	02/07/2016
+Gaseosa	350	Bebidas 31	5	5	4	02/07/2016
+Desinfectante Liquido	1500	Aseo	42	15	11	02/07/2016
+Jabón Liquido	1000	Aseo	26	12	9	02/07/2016
